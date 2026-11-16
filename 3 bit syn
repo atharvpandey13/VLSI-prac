@@ -1,0 +1,64 @@
+
+`timescale 1ns/1ps
+
+module sync_counter (
+    input wire clk,
+    input wire rst,
+    output reg [2:0] q
+);
+
+// All flip-flops use the same clock
+always @(posedge clk or posedge rst) begin
+    if (rst)
+        q <= 3'b000;
+    else begin
+        q[0] <= ~q[0];
+        q[1] <= q[1] ^ q[0];
+        q[2] <= q[2] ^ (q[1] & q[0]);
+    end
+end
+
+endmodule
+
+
+
+
+`timescale 1ns/1ps
+
+module sync_counter_tb;
+
+reg clk, rst;
+wire [2:0] q;
+
+// Instantiate the counter
+sync_counter uut (
+    .clk(clk),
+    .rst(rst),
+    .q(q)
+);
+
+// Clock generation: 20 ns period
+always #10 clk = ~clk;
+
+initial begin
+    // Initialize
+    clk = 1'b0;
+    rst = 1'b1;
+
+    // Apply reset
+    #20;
+    rst = 1'b0;
+
+    // Run counter
+    #300;
+
+    $finish;
+end
+
+// Display values
+initial begin
+    $monitor("Time = %0t | Reset = %b | Q = %b",
+             $time, rst, q);
+end
+
+endmodule
